@@ -1,125 +1,105 @@
-import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 
-export function ItemDetail () {
-  const { id } = useParams();
+const API_URL = "http://localhost:3000/api/item";
+
+export default function ItemDetail() {
+  const { id } = useParams(); // undefined for new
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const itemNameRef = useRef();
-  const itemCategoryRef = useRef();
-  const itemPriceRef = useRef();
 
-  async function loadItem () {
-    try {
-      const uri = `http://localhost:3000/api/item/${id}`;
-      console.log("==> uri: ", uri);
-      const result = await fetch(uri);
-      const data = await result.json();
-      console.log("==> data :", data);
-      itemNameRef.current.value = data.itemName;
-      itemCategoryRef.current.value = data.itemCategory;
-      itemPriceRef.current.value = data.itemPrice;
-    } catch (err) {
-      console.error("Failed to load item:", err);
-      alert("Failed to load item details");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const [form, setForm] = useState({
+    itemName: "",
+    itemCategory: "Stationary",
+    itemPrice: "",
+    status: "ACTIVE",
+  });
 
-  async function onUpdate () {
-    if (!itemNameRef.current.value || !itemPriceRef.current.value) {
-      alert("Please fill in all fields");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+
+    setLoading(true);
+    fetch(`${API_URL}/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setForm({
+          itemName: data.itemName ?? "",
+          itemCategory: data.itemCategory ?? "Stationary",
+          itemPrice: data.itemPrice ?? "",
+          status: data.status ?? "ACTIVE",
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const body = {
+      itemName: form.itemName,
+      itemCategory: form.itemCategory,
+      itemPrice: Number(form.itemPrice),
+      status: form.status,
+    };
+
+    if (!body.itemName.trim() || !body.itemCategory.trim() || Number.isNaN(body.itemPrice)) {
+      alert("Please fill Item Name, Category, and valid Price");
       return;
     }
 
-    setIsSaving(true);
-    const body = {
-      name: itemNameRef.current.value,
-      category: itemCategoryRef.current.value,
-      price: itemPriceRef.current.value
-    };
-    
-    try {
-      const uri = `http://localhost:3000/api/item/${id}`;
-      console.log("==> uri: ", uri);
-      const result = await fetch(uri, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      
-      if (result.status === 200) {
-        alert("Item updated successfully!");
-        loadItem();
-      } else {
-        alert("Failed to update item");
-      }
-    } catch (err) {
-      console.error("Update error:", err);
-      alert("Error updating item");
-    } finally {
-      setIsSaving(false);
+    const method = id ? "PUT" : "POST";
+    const url = id ? `${API_URL}/${id}` : API_URL;
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(json?.message || "Save failed");
+      return;
     }
+
+    alert(id ? "Updated successfully" : "Created successfully");
+    navigate("/items");
   }
 
-  useEffect(() => {
-    loadItem();
-  }, [id]);
-
-  if (isLoading) return <div className="loading">Loading item details...</div>;
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="item-detail-container">
-      <div className="detail-card">
-        <div className="detail-header">
-          <h1>✏️ Edit Item</h1>
-          <button className="btn-back" onClick={() => navigate(-1)}>← Back</button>
-        </div>
+    <div style={{ padding: 20 }}>
+      <h2>{id ? "Edit Item" : "New Item"}</h2>
 
-        <form className="detail-form" onSubmit={(e) => { e.preventDefault(); onUpdate(); }}>
-          <div className="form-group">
-            <label htmlFor="itemName">Item Name</label>
-            <input
-              id="itemName"
-              type="text"
-              ref={itemNameRef}
-              placeholder="Enter item name"
-            />
-          </div>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10, maxWidth: 400 }}>
+        <input
+          placeholder="Item Name"
+          value={form.itemName}
+          onChange={(e) => setForm({ ...form, itemName: e.target.value })}
+        />
 
-          <div className="form-group">
-            <label htmlFor="itemCategory">Category</label>
-            <select id="itemCategory" ref={itemCategoryRef}>
-              <option>Stationary</option>
-              <option>Kitchenware</option>
-              <option>Appliance</option>
-            </select>
-          </div>
+        <select value={form.itemCategory} onChange={(e) => setForm({ ...form, itemCategory: e.target.value })}>
+          <option>Stationary</option>
+          <option>Kitchenware</option>
+          <option>Appliance</option>
+        </select>
 
-          <div className="form-group">
-            <label htmlFor="itemPrice">Price</label>
-            <input
-              id="itemPrice"
-              type="number"
-              ref={itemPriceRef}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-            />
-          </div>
+        <input
+          placeholder="Price"
+          value={form.itemPrice}
+          onChange={(e) => setForm({ ...form, itemPrice: e.target.value })}
+        />
 
-          <div className="form-actions">
-            <button type="submit" className="btn-update" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Update Item"}
-            </button>
-            <button type="button" className="btn-cancel" onClick={() => navigate(-1)}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="INACTIVE">INACTIVE</option>
+        </select>
+
+        <button type="submit">{id ? "Update" : "Create"}</button>
+        <Link to="/items">Back</Link>
+      </form>
     </div>
   );
 }

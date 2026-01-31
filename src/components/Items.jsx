@@ -1,103 +1,175 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
+const API_URL = "http://localhost:3000/api/item";
+const ITEMS_PER_PAGE = 10;
 
-export function Items() {
+export default function Items() {
   const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const itemNameRef = useRef();
   const itemCategoryRef = useRef();
   const itemPriceRef = useRef();
 
-  async function loadItems() {
+  async function loadItems(p = 1) {
     try {
-      const response = await fetch("http://localhost:3000/api/item");
-      const data = await response.json();
-      console.log("==> data : ", data);
-      setItems(data);
+      const res = await fetch(`${API_URL}?page=${p}&limit=${ITEMS_PER_PAGE}`);
+      const json = await res.json();
+
+      // json is an OBJECT: { data: [], page, totalPages, ... }
+      setItems(json.data || []);
+      setPage(json.page || p);
+      setTotalPages(json.totalPages || 1);
     } catch (err) {
       console.log("==> err : ", err);
       alert("Loading items failed");
-    } finally {
-      setIsLoading(false);
     }
   }
 
   async function onItemSave() {
-    if (!itemNameRef.current.value || !itemPriceRef.current.value) {
-      alert("Please fill in all fields");
+    const uri = API_URL;
+
+    const body = {
+      itemName: itemNameRef.current.value,
+      itemCategory: itemCategoryRef.current.value,
+      itemPrice: Number(itemPriceRef.current.value),
+      status: "ACTIVE",
+    };
+
+    if (!body.itemName.trim() || !body.itemCategory.trim() || Number.isNaN(body.itemPrice)) {
+      alert("Please fill Item Name, Category, and valid Price");
       return;
     }
 
-    const uri = "http://localhost:3000/api/item";
-    const body = {
-      name: itemNameRef.current.value,
-      category: itemCategoryRef.current.value,
-      price: itemPriceRef.current.value,
-    };
+    const result = await fetch(uri, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const json = await result.json().catch(() => ({}));
+    if (!result.ok) {
+      alert(json?.message || "Create failed");
+      return;
+    }
+
+    // Clear form
+    itemNameRef.current.value = "";
+    itemCategoryRef.current.value = "Stationary";
+    itemPriceRef.current.value = "";
+
+    // Reload first page so you can see the newest item
+    loadItems(1);
+  }
+
+  async function onDeleteItem(id, name) {
+    if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const result = await fetch(uri, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await result.json();
-      console.log("==> data: ", data);
-      itemNameRef.current.value = "";
-      itemPriceRef.current.value = "";
-      loadItems();
+      const uri = `${API_URL}/${id}`;
+      const result = await fetch(uri, { method: "DELETE" });
+      const json = await result.json().catch(() => ({}));
+
+      if (!result.ok) {
+        alert(json?.message || "Failed to delete item");
+        return;
+      }
+
+      alert("Item deleted successfully");
+
+      // Reload current page (or previous if last item removed)
+      const shouldGoBack = items.length === 1 && page > 1;
+      const nextPage = shouldGoBack ? page - 1 : page;
+      loadItems(nextPage);
     } catch (err) {
-      alert("Failed to add item");
+      console.log("==> err : ", err);
+      alert("Error deleting item");
     }
   }
 
   useEffect(() => {
-    console.log("==> Init...");
-    loadItems();
+    loadItems(1);
   }, []);
 
-  if (isLoading) return <div className="loading">Loading items...</div>;
-
   return (
-    <div className="items-container">
-      <h1>📦 Item Management</h1>
-      <div className="table-wrapper">
-        <table className="items-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item._id}>
-                <td>{item._id}</td>
-                <td className="name-cell">{item.itemName}</td>
-                <td><span className="category-badge">{item.itemCategory}</span></td>
-                <td className="price-cell">${item.itemPrice}</td>
-                <td><a href={`/items/${item._id}`} className="edit-link">Edit</a></td>
-              </tr>
-            ))}
-            <tr className="add-row">
-              <td>-</td>
-              <td><input type="text" ref={itemNameRef} placeholder="Item name" /></td>
+    <>
+      <h1>Item Management</h1>
+      <p>
+        Page {page} of {totalPages} | Showing {items.length} item(s)
+      </p>
+
+      <table border="1" cellPadding="10" cellSpacing="0" style={{ width: "100%", marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {items.map((item) => (
+            <tr key={item._id}>
+              <td>{item._id}</td>
+              <td>{item.itemName}</td>
+              <td>{item.itemCategory}</td>
+              <td>THB {Number(item.itemPrice).toFixed(2)}</td>
+              <td>{item.status}</td>
               <td>
-                <select ref={itemCategoryRef}>
-                  <option>Stationary</option>
-                  <option>Kitchenware</option>
-                  <option>Appliance</option>
-                </select>
+                <Link to={`/items/${item._id}`}>Edit</Link>
+                {" | "}
+                <button onClick={() => onDeleteItem(item._id, item.itemName)}>Delete</button>
               </td>
-              <td><input type="number" ref={itemPriceRef} placeholder="0.00" step="0.01" /></td>
-              <td><button onClick={onItemSave} className="btn-add">Add Item</button></td>
             </tr>
-          </tbody>
-        </table>
+          ))}
+
+          {/* Add new item row */}
+          <tr>
+            <td>-</td>
+            <td>
+              <input type="text" ref={itemNameRef} placeholder="Item name" />
+            </td>
+            <td>
+              <select ref={itemCategoryRef} defaultValue="Stationary">
+                <option>Stationary</option>
+                <option>Kitchenware</option>
+                <option>Appliance</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" ref={itemPriceRef} placeholder="Price" />
+            </td>
+            <td>ACTIVE</td>
+            <td>
+              <button onClick={onItemSave}>Add Item</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Pagination Controls */}
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <button onClick={() => loadItems(page - 1)} disabled={page === 1} style={{ marginRight: "10px" }}>
+          Previous
+        </button>
+
+        <span style={{ margin: "0 10px" }}>
+          Page <b>{page}</b> / {totalPages}
+        </span>
+
+        <button onClick={() => loadItems(page + 1)} disabled={page === totalPages} style={{ marginLeft: "10px" }}>
+          Next
+        </button>
       </div>
-    </div>
+
+      <div style={{ marginTop: 15, textAlign: "center" }}>
+        <Link to="/items/new">Create in Form Page</Link>
+      </div>
+    </>
   );
 }
