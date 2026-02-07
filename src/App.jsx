@@ -1,35 +1,28 @@
-// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// import { Items } from './components/Items';
-// import { ItemDetail } from './components/ItemDetail';
-
-// function App() {
-//   return (
-//     <Router>
-//       <div style={{ padding: '20px' }}>
-//         <Routes>
-//           <Route path="/" element={<Items />} />
-//           <Route path="/items/:id" element={<ItemDetail />} />
-//         </Routes>
-//       </div>
-//     </Router>
-//   );
-// }
-
-// export default App;
-
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Items from "./components/Items.jsx";
-import ItemDetail from "./components/ItemDetail.jsx";
-
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/items" />} />
-        <Route path="/items" element={<Items />} />
-        <Route path="/items/new" element={<ItemDetail />} />
-        <Route path="/items/:id" element={<ItemDetail />} />
-      </Routes>
-    </BrowserRouter>
-  );
+import { useEffect, useState } from 'react';
+import './App.css'
+import { Route, Routes } from 'react-router-dom';
+import TestApi from './components/TestApi';
+import TestMongo from './components/TestMongo';
+import RequireAuth from './middleware/RequireAuth';
+import Profile from './components/Profile';
+import Login from './components/Login';
+import Logout from './components/Logout';
+function App() {
+ return(
+ <Routes>
+ <Route path='/test_api' element={<TestApi/>}/>
+ <Route path='/test_mongo' element={<TestMongo/>}/>
+ <Route path='/login' element={<Login/>}/>
+ <Route path='/profile' element={ <RequireAuth>
+ <Profile/>
+ </RequireAuth>
+ }/>
+ <Route path='/logout' element={
+ <RequireAuth>
+ <Logout/>
+ </RequireAuth>
+ }/>
+ </Routes>
+ );
 }
+export default App
