@@ -123,78 +123,75 @@ export default function Profile () {
  }, [imagePreviewUrl]);
 
  return (
- <div>
- <h3>Profile Management</h3>
- {
- isLoading ?
- <div>Loading...</div> :
- <form onSubmit={onSaveProfile}>
- <table>
- <tbody>
- <tr>
- <th>ID</th>
- <td>
+ <main className="profile-page">
+ <section className="profile-card">
+ <header className="profile-header">
+ <p className="profile-eyebrow">Account</p>
+ <h1>Profile Management</h1>
+ <p className="profile-subtitle">Update your personal details and profile image.</p>
+ </header>
+
+ {isLoading ? (
+ <div className="profile-loading">Loading profile...</div>
+ ) : (
+ <form className="profile-form" onSubmit={onSaveProfile}>
+ <label className="form-field">
+ <span>ID</span>
  <input type="text" value={data.id} readOnly />
- </td>
- </tr>
- <tr>
- <th>First name</th>
- <td>
+ </label>
+
+ <div className="form-grid">
+ <label className="form-field">
+ <span>First name</span>
  <input
  type="text"
  value={data.firstname}
  onChange={(e) => setData((prev) => ({ ...prev, firstname: e.target.value }))}
  required
  />
- </td>
- </tr>
- <tr>
- <th>Last name</th>
- <td>
+ </label>
+
+ <label className="form-field">
+ <span>Last name</span>
  <input
  type="text"
  value={data.lastname}
  onChange={(e) => setData((prev) => ({ ...prev, lastname: e.target.value }))}
  required
  />
- </td>
- </tr>
- <tr>
- <th>Email</th>
- <td>
+ </label>
+ </div>
+
+ <label className="form-field">
+ <span>Email</span>
  <input
  type="email"
  value={data.email}
  onChange={(e) => setData((prev) => ({ ...prev, email: e.target.value }))}
  required
  />
- </td>
- </tr>
- <tr>
- <th>Profile Image</th>
- <td>
+ </label>
+
+ <label className="form-field">
+ <span>Profile Image</span>
  <input type="file" accept="image/*" onChange={onImageFileChange} />
- </td>
- </tr>
- {currentImageUrl && (
- <tr>
- <th>Preview</th>
- <td>
- <img
- src={currentImageUrl}
- alt="Profile preview"
- style={{ width: 120, height: 120, objectFit: "cover", border: "1px solid #ccc" }}
- />
- </td>
- </tr>
+ </label>
+
+ <div className="profile-preview">
+ <p>Preview</p>
+ {currentImageUrl ? (
+ <img src={currentImageUrl} alt="Profile preview" />
+ ) : (
+ <div className="profile-avatar-placeholder">No Image</div>
  )}
- </tbody>
- </table>
- <button type="submit" disabled={isSaving}>
+ </div>
+
+ <button className="save-button" type="submit" disabled={isSaving}>
  {isSaving ? "Saving..." : "Save Profile"}
  </button>
  </form>
- }
- </div>
+ )}
+ </section>
+ </main>
  )
 }
