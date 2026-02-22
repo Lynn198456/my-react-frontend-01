@@ -38,6 +38,13 @@
   margin-bottom: 1.25rem;
 }
 
+.profile-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .profile-eyebrow {
   margin: 0;
   font-size: 0.8rem;
@@ -139,7 +146,6 @@
 
 .save-button {
   margin-top: 0.5rem;
-  justify-self: start;
   border: 0;
   border-radius: 999px;
   padding: 0.72rem 1.3rem;
@@ -149,6 +155,40 @@
   font-size: 0.95rem;
   cursor: pointer;
   transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.profile-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.ghost-button {
+  border: 1px solid #d8c6b1;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  background: #fff7ec;
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.ghost-button:hover {
+  background: #f5ead8;
+  transform: translateY(-1px);
+}
+
+.text-link-button {
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0.25rem 0.2rem;
+}
+
+.text-link-button:hover {
+  color: var(--accent);
 }
 
 .save-button:hover {
@@ -178,6 +218,22 @@
 
   .save-button {
     width: 100%;
-    justify-self: stretch;
+  }
+
+  .profile-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ghost-button,
+  .text-link-button {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
   }
 }

@@ -1,8 +1,10 @@
 import { useUser } from "../contexts/UserProvider";
 import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { getApiBaseUrl } from "../lib/apiBase";
 export default function Profile () {
  const { logout } = useUser();
+ const navigate = useNavigate();
  const [isLoading, setIsLoading] = useState(true);
  const [isSaving, setIsSaving] = useState(false);
  const [data, setData] = useState({
@@ -102,6 +104,14 @@ export default function Profile () {
  setSelectedImage(null);
  return;
  }
+
+ async function onLogoutClick() {
+ try {
+ await logout();
+ } finally {
+ navigate("/login", { replace: true });
+ }
+ }
  if (!file.type.startsWith("image/")) {
  alert("Only image files are allowed");
  event.target.value = "";
@@ -127,9 +137,16 @@ export default function Profile () {
  <main className="profile-page">
  <section className="profile-card">
  <header className="profile-header">
+ <div className="profile-header-row">
+ <div>
  <p className="profile-eyebrow">Account</p>
  <h1>Profile Management</h1>
  <p className="profile-subtitle">Update your personal details and profile image.</p>
+ </div>
+ <button className="ghost-button" type="button" onClick={onLogoutClick}>
+ Log out
+ </button>
+ </div>
  </header>
 
  {isLoading ? (
@@ -187,9 +204,15 @@ export default function Profile () {
  )}
  </div>
 
+ <div className="profile-actions">
  <button className="save-button" type="submit" disabled={isSaving}>
  {isSaving ? "Saving..." : "Save Profile"}
  </button>
+ <button className="ghost-button" type="button" onClick={onLogoutClick}>
+ Logout
+ </button>
+ <Link className="text-link-button" to="/logout">Logout Route</Link>
+ </div>
  </form>
  )}
  </section>
