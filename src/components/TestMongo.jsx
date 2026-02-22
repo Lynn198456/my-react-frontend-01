@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { getApiBaseUrl } from "../lib/apiBase";
 
 export default function TestMongo() {
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = getApiBaseUrl();
   const [status, setStatus] = useState("idle");
   const [payload, setPayload] = useState(null);
 
@@ -9,11 +10,6 @@ export default function TestMongo() {
     let cancelled = false;
 
     async function fetchMongo() {
-      if (!API_URL) {
-        setStatus("missing_env");
-        return;
-      }
-
       try {
         setStatus("loading");
         const res = await fetch(`${API_URL}/api/mongo`);
@@ -35,10 +31,6 @@ export default function TestMongo() {
       cancelled = true;
     };
   }, [API_URL]);
-
-  if (status === "missing_env") {
-    return <div>Missing VITE_API_URL</div>;
-  }
 
   return (
     <div>

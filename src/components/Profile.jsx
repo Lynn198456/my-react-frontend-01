@@ -1,5 +1,6 @@
 import { useUser } from "../contexts/UserProvider";
 import { useEffect, useMemo, useState } from "react";
+import { getApiBaseUrl } from "../lib/apiBase";
 export default function Profile () {
  const { logout } = useUser();
  const [isLoading, setIsLoading] = useState(true);
@@ -12,7 +13,7 @@ export default function Profile () {
  profileImagePath: "",
  });
  const [selectedImage, setSelectedImage] = useState(null);
- const API_URL = import.meta.env.VITE_API_URL;
+ const API_URL = getApiBaseUrl();
 
  const imagePreviewUrl = useMemo(() => {
  if (!selectedImage) return "";

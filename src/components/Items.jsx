@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { getApiBaseUrl } from "../lib/apiBase";
 
-const API_URL = "http://localhost:3000/api/item";
+const API_URL = `${getApiBaseUrl()}/api/item`;
 const ITEMS_PER_PAGE = 10;
 
 export default function Items() {
